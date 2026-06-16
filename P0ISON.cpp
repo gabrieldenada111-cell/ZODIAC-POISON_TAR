@@ -88,8 +88,8 @@ int main() {
 
         if (atividade < 0) continue;
 
-        // 1. SE ENTRAR UMA NOVA CONEXÃO DE ATACANTE
-        if (FD_SETVAL(socket_principal, &conjunto_leitura)) {
+        // 1. CORREÇÃO: SE ENTRAR UMA NOVA CONEXÃO DE ATACANTE (Uso correto de FD_ISSET)
+        if (FD_ISSET(socket_principal, &conjunto_leitura)) {
             struct sockaddr_in cliente;
             socklen_t tamanho_addr = sizeof(cliente);
             int novo_socket = accept(socket_principal, (struct sockaddr*)&cliente, &tamanho_addr);
@@ -102,20 +102,17 @@ int main() {
                      << BRANCO << " (ID: " << novo_socket << ")" << RESET << endl;
                 cout << CIANO << "ZODIAC_NULL_CONSOLE_> " << flush;
                 
-                // Envia uma mensagem de boas-vindas padrão HTTP para estabilizar a linha dele
                 string welcome = "HTTP/1.1 200 OK\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n[CONEXÃO ESTABELECIDA COM O MAESTRO ZODIACO]\n";
                 send(novo_socket, welcome.c_str(), welcome.length(), 0);
             }
         }
 
-        // 2. SE VOCÊ DIGITAR ALGO NO SEU TECLADO
-        if (FD_SETVAL(STDIN_FILENO, &conjunto_leitura)) {
+        // 2. CORREÇÃO: SE VOCÊ DIGITAR ALGO NO SEU TECLADO (Uso correto de FD_ISSET)
+        if (FD_ISSET(STDIN_FILENO, &conjunto_leitura)) {
             string entrada_usuario;
             getline(cin, entrada_usuario);
 
             if (!entrada_usuario.empty() && !sockets_clientes.empty()) {
-                // Se você digitar "all: mensagem", envia para todos.
-                // Se digitar "ID: mensagem" (ex: "4: tchau"), envia só para aquele alvo específico.
                 size_t pos_dois_pontos = entrada_usuario.find(":");
                 
                 if (pos_dois_pontos != string::npos) {
@@ -123,7 +120,6 @@ int main() {
                     string msg_real = entrada_usuario.substr(pos_dois_pontos + 1) + "\n";
 
                     if (alvo == "all") {
-                        // Envia para todo mundo ao mesmo tempo (Broadcast)
                         for (auto it = sockets_clientes.begin(); it != sockets_clientes.end(); ) {
                             if (send(*it, msg_real.c_str(), msg_real.length(), 0) < 0) {
                                 close(*it);
@@ -134,7 +130,6 @@ int main() {
                         }
                         cout << VERDE << "[+] Transmissão enviada para todos os chassis ativos." << RESET << endl;
                     } else {
-                        // Envia apenas para o ID selecionado
                         try {
                             int id_alvo = stoi(alvo);
                             send(id_alvo, msg_real.c_str(), msg_real.length(), 0);
@@ -144,7 +139,6 @@ int main() {
                         }
                     }
                 } else {
-                    // Comportamento padrão: Se não colocar o prefixo, envia para todos
                     string msg_padrao = entrada_usuario + "\n";
                     for (auto it = sockets_clientes.begin(); it != sockets_clientes.end(); ) {
                         if (send(*it, msg_padrao.c_str(), msg_padrao.length(), 0) < 0) {
@@ -159,14 +153,13 @@ int main() {
             cout << CIANO << "ZODIAC_NULL_CONSOLE_> " << flush;
         }
 
-        // 3. SE ALGUM ALVO SE DESCONECTAR OU ENVIAR DADOS
+        // 3. CORREÇÃO: SE ALGUM ALVO SE DESCONECTAR OU ENVIAR DADOS
         for (auto it = sockets_clientes.begin(); it != sockets_clientes.end(); ) {
-            if (FD_SETVAL(*it, &conjunto_leitura)) {
-                char buffer = {0};
-                int bytes_recebidos = recv(*it, buffer, sizeof(buffer) - 1, 0);
+            if (FD_ISSET(*it, &conjunto_leitura)) {
+                char buffer_leitura[512] = {0}; // CORREÇÃO: Buffer do tipo array alocado corretamente
+                int bytes_recebidos = recv(*it, buffer_leitura, sizeof(buffer_leitura) - 1, 0);
 
                 if (bytes_recebidos <= 0) {
-                    // Alvo fechou o terminal dele
                     cout << VERMELHO << "\n[-] [DESCONEXÃO] O alvo do ID " << *it << " fechou a conexão." << RESET << endl;
                     close(*it);
                     it = sockets_clientes.erase(it);
