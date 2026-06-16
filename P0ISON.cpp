@@ -8,7 +8,9 @@
 #include <csignal>
 #include <vector>
 #include <sys/select.h>
-#include <iomanip> // Necessário para alinhar a tabela na tela
+#include <iomanip>
+#include <sstream>
+#include <fstream> // CORREÇÃO: Necessário para ler o arquivo .txt do seu Linux
 
 using namespace std;
 
@@ -29,6 +31,21 @@ struct Alvo {
 int socket_principal;
 vector<Alvo> lista_alvos; 
 
+void desenhar_menu_zodiac() {
+    cout << ROXO << "=================================================================================" << RESET << endl;
+    cout << CIANO << " ______  ____  _____   _    ____ " << endl;
+    cout << CIANO << "|_  _  |/ __ \\|  __ \\ | |  / ___|" << endl;
+    cout << CIANO << "  / /  | /  \\ | |  \\ \\| | | |      " << VERMELHO << "   [ OPERADOR SUPREMO ]" << endl;
+    cout << CIANO << " / /__ | \\__/ | |__/ /| | | |___   " << BRANCO << "       ⚡ " << VERMELHO << PISCANDO << "N U L L" << RESET << BRANCO << " ⚡" << endl;
+    cout << CIANO << "|_____| \\____/|_____/ |_|  \\____|  " << VERDE << "   (⚙️ REDIRECT FILE ENGINE v8.5 ⚙️)" << endl;
+    cout << ROXO << "=================================================================================" << RESET << endl;
+    cout << VERDE << "   [+] Comandos: 'list' (tabela) | 'clear' (limpar) | 'exit:all' (desligar tudo)" << RESET << endl;
+    cout << CIANO << "   [*] Redirecionar TXT Local: 'kick:ID:file' ou 'strike:ID:file'" << RESET << endl;
+    cout << AMARELO << "   [!] Nota: O sistema vai ler automaticamente o arquivo '~/POISON/aviso.txt'" << RESET << endl;
+    cout << ROXO << "=================================================================================" << RESET << endl;
+    cout << AMARELO << "   [*] Hub do Zodíaco operacional. Aguardando conexões...\n" << RESET << endl;
+}
+
 void fechar_fortaleza(int sinal) {
     cout << "\n\n" << VERMELHO << "[-] [SISTEMA] Fechando conexões e liberando portas..." << RESET << endl;
     for (const auto& alvo : lista_alvos) {
@@ -42,22 +59,7 @@ int main() {
     signal(SIGINT, fechar_fortaleza);
     signal(SIGPIPE, SIG_IGN); 
     
-    system("clear");
-
     int PORTA_ARMADILHA  = 8081;          
-
-    cout << ROXO << "=================================================================================" << RESET << endl;
-    cout << CIANO << " ______  ____  _____   _    ____ " << endl;
-    cout << CIANO << "|_  _  |/ __ \\|  __ \\ | |  / ___|" << endl;
-    cout << CIANO << "  / /  | /  \\ | |  \\ \\| | | |      " << VERMELHO << "   [ OPERADOR SUPREMO ]" << endl;
-    cout << CIANO << " / /__ | \\__/ | |__/ /| | | |___   " << BRANCO << "       ⚡ " << VERMELHO << PISCANDO << "N U L L" << RESET << BRANCO << " ⚡" << endl;
-    cout << CIANO << "|_____| \\____/|_____/ |_|  \\____|  " << VERDE << "   (⚙️ MATRIX CONSOLE SYSTEM ⚙️)" << endl;
-    cout << ROXO << "=================================================================================" << RESET << endl;
-    cout << VERDE << "   [+] Central ativa. Digite 'list' para ver a tabela de chassis ativos." << RESET << endl;
-    cout << CIANO << "   [*] Comandos: 'list' (tabela) | 'all:texto' (massa) | 'ID:texto' (direcionado)" << RESET << endl;
-    cout << ROXO << "=================================================================================" << RESET << endl;
-    cout << AMARELO << "   [*] Aguardando conexões...\n" << RESET << endl;
-
     socket_principal = socket(AF_INET, SOCK_STREAM, 0);
     int op = 1;
     setsockopt(socket_principal, SOL_SOCKET, SO_REUSEADDR, &op, sizeof(op));
@@ -74,6 +76,7 @@ int main() {
     }
 
     listen(socket_principal, 50);
+    desenhar_menu_zodiac();
 
     fd_set conjunto_leitura;
 
@@ -102,7 +105,7 @@ int main() {
                 novo_alvo.ip = inet_ntoa(cliente.sin_addr);
                 lista_alvos.push_back(novo_alvo);
 
-                cout << VERDE << "\n[🛰️ ALVO INTERCEPTADO] ➔ Novo chassi adicionado à tabela de controle: " 
+                cout << VERDE << "\n[🛰️ ALVO INTERCEPTADO] ➔ Chassi linkado no terminal: " 
                      << AMARELO << novo_alvo.ip << BRANCO << " (ID: " << novo_alvo.id << ")" << RESET << endl;
                 cout << CIANO << "ZODIAC_NULL_CONSOLE_> " << flush;
                 
@@ -115,13 +118,24 @@ int main() {
             string entrada;
             getline(cin, entrada);
 
-            if (entrada == "list") {
+            if (entrada == "clear") {
+                system("clear");
+                desenhar_menu_zodiac();
+            }
+            else if (entrada == "exit:all") {
+                cout << VERMELHO << "\n[-] [FECHAMENTO] Executando comando de ejeção global..." << RESET << endl;
+                for (const auto& alvo : lista_alvos) {
+                    close(alvo.id);
+                }
+                close(socket_principal);
+                exit(0);
+            }
+            else if (entrada == "list") {
                 cout << ROXO << "\n+-------------------------------------------------------+" << RESET << endl;
                 cout << CIANO << "|             TABELA DE CHASSIS ATIVOS (NULL)           |" << RESET << endl;
                 cout << ROXO << "+----------+-------------------+------------------------+" << RESET << endl;
                 cout << AMARELO << "| INDEX ID | ENDEREÇO IP REAL  | STATUS DO MONITOR      |" << RESET << endl;
                 cout << ROXO << "+----------+-------------------+------------------------+" << RESET << endl;
-                
                 if (lista_alvos.empty()) {
                     cout << BRANCO << "|      [ NENHUM INTRUSO PRESO NA ARMADILHA ATUALMENTE ]        |" << RESET << endl;
                 } else {
@@ -133,29 +147,170 @@ int main() {
                 }
                 cout << ROXO << "+----------+-------------------+------------------------+\n" << RESET << endl;
             }
-            else if (!entrada.empty() && !lista_alvos.empty()) {
+            else if (!entrada.empty()) {
                 size_t pos_dois_pontos = entrada.find(":");
                 if (pos_dois_pontos != string::npos) {
                     string prefixo = entrada.substr(0, pos_dois_pontos);
-                    string msg_real = "🚨 [AVISO ZODIACO]: " + entrada.substr(pos_dois_pontos + 1) + "\n";
+                    string resto = entrada.substr(pos_dois_pontos + 1);
 
-                    if (prefixo == "all") {
-                        for (auto it = lista_alvos.begin(); it != lista_alvos.end(); ) {
-                            if (send(it->id, msg_real.c_str(), msg_real.length(), 0) < 0) {
-                                close(it->id);
-                                it = lista_alvos.erase(it);
-                            } else {
-                                ++it;
-                            }
-                        }
-                        cout << VERDE << "[+] Alerta em massa injetado nos terminais." << RESET << endl;
-                    } else {
+                    if (prefixo == "kick" || prefixo == "strike") {
+                        size_t sub_dois_pontos = resto.find(":");
+                        string id_str = (sub_dois_pontos == string::npos) ? resto : resto.substr(0, sub_dois_pontos);
+                        bool linkar_arquivo_local = (sub_dois_pontos != string::npos && resto.substr(sub_dois_pontos + 1) == "file");
+
                         try {
-                            int id_alvo = stoi(prefixo);
-                            send(id_alvo, msg_real.c_str(), msg_real.length(), 0);
-                            cout << CIANO << "[+] Alerta direcionado enviado ao ID: " << id_alvo << RESET << endl;
-                        } catch (...) {
-                            cout << VERMELHO << "[!] Use 'list' ou 'all:texto' ou 'ID:texto'." << RESET << endl;
+                            int id_alvo = stoi(id_str);
+                            bool achou = false;
+
+                            for (auto it = lista_alvos.begin(); it != lista_alvos.end(); ++it) {
+                                if (it->id == id_alvo) {
+                                    achou = true;
+                                    
+                                    // MOTOR DE REDIRECIONAMENTO DE TXT LOCAL
+                                    if (linkar_arquivo_local) {
+                                        // Abre o arquivo de aviso que está na sua pasta POISON do Linux
+                                        ifstream arquivo_local("/home/gabriel/POISON/aviso.txt");
+                                        string conteudo_arquivo = "";
+                                        
+                                        if (arquivo_local.is_open()) {
+                                            string linha;
+                                            while (getline(arquivo_local, linha)) {
+                                                conteudo_arquivo += linha + "\n";
+                                            }
+                                            arquivo_local.close();
+                                        } else {
+                                            // Fallback caso você esqueça de criar o arquivo aviso.txt na pasta
+                                            conteudo_arquivo = "AVISO SUPREMO ZODIACO: Conexao encerrada pelo operador NULL.\n";
+                                        }
+
+                                        // Monta o cabeçalho HTTP acoplando os bytes do seu arquivo de texto local
+                                        string payload_transmissao = 
+                                            "HTTP/1.1 200 OK\r\n"
+                                            "Content-Type: text/plain\r\n"
+                                            "Content-Disposition: attachment; filename=\"ZODIAC_WARNING.txt\"\r\n\r\n" + conteudo_arquivo;
+                                        
+                                        send(id_alvo, payload_transmissao.c_str(), payload_transmissao.length(), 0);
+                                        cout << VERDE << "[+] Arquivo local 'aviso.txt' redirecionado com sucesso." << RESET << endl;
+                                    }
+
+                                    if (prefixo == "kick") {
+                                        cout << VERMELHO << "\n[-] [EJEÇÃO] Expulsando o ID " << id_alvo << " do barramento." << RESET << endl;
+                                        close(id_alvo);
+                                    } else {
+        // 2. PROCESSAMENTO DO CONSOLE INTERATIVO DO OPERADOR (CORRIGIDO)
+        if (FD_ISSET(STDIN_FILENO, &conjunto_leitura)) {
+            string entrada;
+            getline(cin, entrada);
+
+            if (entrada == "clear") {
+                system("clear");
+                desenhar_menu_zodiac();
+            }
+            else if (entrada == "exit:all") {
+                cout << VERMELHO << "\n[-] [FECHAMENTO] Executando comando de ejeção global..." << RESET << endl;
+                for (const auto& alvo : lista_alvos) {
+                    close(alvo.id);
+                }
+                close(socket_principal);
+                exit(0);
+            }
+            else if (entrada == "list") {
+                cout << ROXO << "\n+-------------------------------------------------------+" << RESET << endl;
+                cout << CIANO << "|             TABELA DE CHASSIS ATIVOS (NULL)           |" << RESET << endl;
+                cout << ROXO << "+----------+-------------------+------------------------+" << RESET << endl;
+                cout << AMARELO << "| INDEX ID | ENDEREÇO IP REAL  | STATUS DO MONITOR      |" << RESET << endl;
+                cout << ROXO << "+----------+-------------------+------------------------+" << RESET << endl;
+                if (lista_alvos.empty()) {
+                    cout << BRANCO << "|      [ NENHUM INTRUSO PRESO NA ARMADILHA ATUALMENTE ]        |" << RESET << endl;
+                } else {
+                    for (const auto& alvo : lista_alvos) {
+                        cout << BRANCO << "| " << setw(8) << alvo.id 
+                             << " | " << setw(17) << alvo.ip 
+                             << " | " << VERDE << "LINHA MONITORADA 🟢 " << BRANCO << " |" << RESET << endl;
+                    }
+                }
+                cout << ROXO << "+----------+-------------------+------------------------+\n" << RESET << endl;
+            }
+            else if (!entrada.empty()) {
+                size_t pos_dois_pontos = entrada.find(":");
+                if (pos_dois_pontos != string::npos) {
+                    string prefixo = entrada.substr(0, pos_dois_pontos);
+                    string resto = entrada.substr(pos_dois_pontos + 1);
+
+                    if (prefixo == "kick" || prefixo == "strike") {
+                        size_t sub_dois_pontos = resto.find(":");
+                        string id_str = (sub_dois_pontos == string::npos) ? resto : resto.substr(0, sub_dois_pontos);
+                        bool linkar_arquivo_local = (sub_dois_pontos != string::npos && resto.substr(sub_dois_pontos + 1) == "file");
+
+                        try {
+                            int id_alvo = stoi(id_str);
+                            bool achou = false;
+
+                            for (auto it = lista_alvos.begin(); it != lista_alvos.end(); ++it) {
+                                if (it->id == id_alvo) {
+                                    achou = true;
+                                    
+                                    if (linkar_arquivo_local) {
+                                        ifstream arquivo_local("/home/gabriel/POISON/aviso.txt");
+                                        string conteudo_arquivo = "";
+                                        
+                                        if (arquivo_local.is_open()) {
+                                            string linha;
+                                            while (getline(arquivo_local, linha)) {
+                                                conteudo_arquivo += linha + "\n";
+                                            }
+                                            arquivo_local.close();
+                                        } else {
+                                            conteudo_arquivo = "AVISO SUPREMO ZODIACO: Conexao encerrada pelo operador NULL.\n";
+                                        }
+
+                                        string payload_transmissao = 
+                                            "HTTP/1.1 200 OK\r\n"
+                                            "Content-Type: text/plain\r\n"
+                                            "Content-Disposition: attachment; filename=\"ZODIAC_WARNING.txt\"\r\n\r\n" + conteudo_arquivo;
+                                        
+                                        send(id_alvo, payload_transmissao.c_str(), payload_transmissao.length(), 0);
+                                        cout << VERDE << "[+] Arquivo local 'aviso.txt' redirecionado com sucesso." << RESET << endl;
+                                    }
+
+                                    if (prefixo == "kick") {
+                                        cout << VERMELHO << "\n[-] [EJEÇÃO] Expulsando o ID " << id_alvo << " do barramento." << RESET << endl;
+                                        close(id_alvo);
+                                    } else {
+                                        cout << VERMELHO << "\n🔥 [ZODIAC STRIKE] -> Descarregando saturação no ID: " << id_alvo << RESET << endl;
+                                        string carga = "🚨 [ZODIAC OVERSIZE CRASH BY NULL] 🚨\n";
+                                        for (int i = 0; i < 100000; ++i) {
+                                            if (send(id_alvo, carga.c_str(), carga.length(), 0) < 0) break;
+                                        }
+                                        close(id_alvo);
+                                    }
+
+                                    lista_alvos.erase(it);
+                                    break;
+                                }
+                            }
+                            if (!achou) cout << VERMELHO << "[!] ID não encontrado." << RESET << endl;
+                        } 
+                        catch (...) {
+                            cout << VERMELHO << "[!] Use 'kick:ID:file' ou 'strike:ID:file'" << RESET << endl;
+                        }
+                    }
+                    else {
+                        string msg_real = "🚨 [AVISO ZODIACO]: " + resto + "\n";
+                        if (prefixo == "all") {
+                            for (auto it = lista_alvos.begin(); it != lista_alvos.end(); ) {
+                                if (send(it->id, msg_real.c_str(), msg_real.length(), 0) < 0) {
+                                    close(it->id);
+                                    it = lista_alvos.erase(it);
+                                } else {
+                                    ++it;
+                                }
+                            }
+                        } else {
+                            try {
+                                int id_alvo = stoi(prefixo);
+                                send(id_alvo, msg_real.c_str(), msg_real.length(), 0);
+                            } catch (...) {}
                         }
                     }
                 }
@@ -163,11 +318,12 @@ int main() {
             cout << CIANO << "ZODIAC_NULL_CONSOLE_> " << flush;
         }
 
+        // 3. MONITORAMENTO DE DESCONEXÕES INESPERADAS (CORRIGIDO)
         for (auto it = lista_alvos.begin(); it != lista_alvos.end(); ) {
             if (FD_ISSET(it->id, &conjunto_leitura)) {
-                char buf[2] = {0}; // CORREÇÃO: Alocado como array para aceitar ponteiro void* legítimo
+                char buf = {0};
                 if (recv(it->id, buf, sizeof(buf) - 1, 0) <= 0) {
-                    cout << VERMELHO << "\n[-] [DESCONEXÃO] O alvo do ID " << it->id << " quebrou a linha e fugiu." << RESET << endl;
+                    cout << VERMELHO << "\n[-] [DESCONEXÃO] O alvo do ID " << it->id << " fugiu." << RESET << endl;
                     close(it->id);
                     it = lista_alvos.erase(it);
                     cout << CIANO << "ZODIAC_NULL_CONSOLE_> " << flush;
