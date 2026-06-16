@@ -21,7 +21,6 @@ const string AMARELO   = "\033[33m\033[1m";
 const string BRANCO    = "\033[37m\033[1m";
 const string PISCANDO  = "\033[5m";
 
-// Estrutura para guardar os dados dos alvos na tabela
 struct Alvo {
     int id;
     string ip;
@@ -92,7 +91,6 @@ int main() {
         int atividade = select(max_fd + 1, &conjunto_leitura, NULL, NULL, NULL);
         if (atividade < 0) continue;
 
-        // 1. RECEBENDO UM NOVO CHASSI DE REDE
         if (FD_ISSET(socket_principal, &conjunto_leitura)) {
             struct sockaddr_in cliente;
             socklen_t tamanho_addr = sizeof(cliente);
@@ -113,13 +111,11 @@ int main() {
             }
         }
 
-        // 2. PROCESSAMENTO DO SEU TECLADO (COMANDO LIST E ALERTAS)
         if (FD_ISSET(STDIN_FILENO, &conjunto_leitura)) {
             string entrada;
             getline(cin, entrada);
 
             if (entrada == "list") {
-                // DESENHA A TABELA CYBERPUNK NA TELA DO TERMINAL
                 cout << ROXO << "\n+-------------------------------------------------------+" << RESET << endl;
                 cout << CIANO << "|             TABELA DE CHASSIS ATIVOS (NULL)           |" << RESET << endl;
                 cout << ROXO << "+----------+-------------------+------------------------+" << RESET << endl;
@@ -167,10 +163,9 @@ int main() {
             cout << CIANO << "ZODIAC_NULL_CONSOLE_> " << flush;
         }
 
-        // 3. MONITORAMENTO DE DESCONEXÕES
         for (auto it = lista_alvos.begin(); it != lista_alvos.end(); ) {
             if (FD_ISSET(it->id, &conjunto_leitura)) {
-                char buf = {0};
+                char buf[2] = {0}; // CORREÇÃO: Alocado como array para aceitar ponteiro void* legítimo
                 if (recv(it->id, buf, sizeof(buf) - 1, 0) <= 0) {
                     cout << VERMELHO << "\n[-] [DESCONEXÃO] O alvo do ID " << it->id << " quebrou a linha e fugiu." << RESET << endl;
                     close(it->id);
