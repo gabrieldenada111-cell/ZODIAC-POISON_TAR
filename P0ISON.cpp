@@ -37,13 +37,13 @@ void desenhar_menu_zodiac() {
     cout << CIANO << "|_  _  |/ __ \\|  __ \\ | |  / ___|" << endl;
     cout << CIANO << "  / /  | /  \\ | |  \\ \\| | | |      " << VERMELHO << "   [ OPERADOR SUPREMO ]" << endl;
     cout << CIANO << " / /__ | \\__/ | |__/ /| | | |___   " << BRANCO << "       ⚡ " << VERMELHO << PISCANDO << "N U L L" << RESET << BRANCO << " ⚡" << endl;
-    cout << CIANO << "|_____| \\____/|_____/ |_|  \\____|  " << VERDE << "   (⚙️ MATRIX CORE SYSTEM v8.5 ⚙️)" << endl;
+    cout << CIANO << "|_____| \\____/|_____/ |_|  \\____|  " << VERDE << "   (🎨 CYBER-INJECT v9.5 PURE WEB ⚙️)" << endl;
     cout << ROXO << "=================================================================================" << RESET << endl;
     cout << VERDE << "   [+] Comandos: 'list' (tabela) | 'clear' (limpar) | 'exit:all' (desligar tudo)" << RESET << endl;
-    cout << CIANO << "   [*] Controle: 'kick:ID' (expulsar) | 'kick:ID:file' (expulsar + injetar txt)" << RESET << endl;
-    cout << AMARELO << "   [*] Saturação: 'strike:ID' (destruir buffer) | 'strike:ID:file' (+ txt)" << RESET << endl;
+    cout << CIANO << "   [*] Redirecionar TXT para HTML: 'kick:ID:file' ou 'strike:ID:file'" << RESET << endl;
+    cout << AMARELO << "   [!] Nota: O sistema vai puxar o texto do arquivo '/home/gabriel/POISON/aviso.txt'" << endl;
     cout << ROXO << "=================================================================================" << RESET << endl;
-    cout << AMARELO << "   [*] Central Zodíaco operacional. Aguardando conexões...\n" << RESET << endl;
+    cout << AMARELO << "   [*] Hub do Zodíaco operacional. Aguardando pacotes...\n" << RESET << endl;
 }
 
 void fechar_fortaleza(int sinal) {
@@ -104,7 +104,7 @@ int main() {
                 novo_alvo.ip = inet_ntoa(cliente.sin_addr);
                 lista_alvos.push_back(novo_alvo);
 
-                cout << VERDE << "\n[🛰️ ALVO INTERCEPTADO] ➔ Chassi na linha de escuta: "
+                cout << VERDE << "\n[🛰️ ALVO INTERCEPTADO] ➔ Chassi linkado no terminal: "
                      << AMARELO << novo_alvo.ip << BRANCO << " (ID: " << novo_alvo.id << ")" << RESET << endl;
                 cout << CIANO << "ZODIAC_NULL_CONSOLE_> " << flush;
 
@@ -127,7 +127,6 @@ int main() {
                     close(alvo.id);
                 }
                 close(socket_principal);
-                cout << VERDE << "[+] Central desligada com sucesso." << RESET << endl;
                 exit(0);
             }
             else if (entrada == "list") {
@@ -168,25 +167,39 @@ int main() {
 
                                     if (linkar_arquivo_local) {
                                         ifstream arquivo_local("/home/gabriel/POISON/aviso.txt");
-                                        string conteudo_arquivo = "";
+                                        string linhas_html_customizadas = "";
 
                                         if (arquivo_local.is_open()) {
                                             string linha;
                                             while (getline(arquivo_local, linha)) {
-                                                conteudo_arquivo += linha + "\n";
+                                                linhas_html_customizadas += "<p>" + linha + "</p>";
                                             }
                                             arquivo_local.close();
                                         } else {
-                                            conteudo_arquivo = "AVISO SUPREMO ZODIACO: Conexao encerrada pelo operador NULL.\n";
+                                            linhas_html_customizadas = "<p>AVISO SUPREMO ZODIACO: Linha encerra por NULL.</p>";
                                         }
 
-                                        string payload_transmissao =
-                                            "HTTP/1.1 200 OK\r\n"
-                                            "Content-Type: text/plain\r\n"
-                                            "Content-Disposition: attachment; filename=\"ZODIAC_WARNING.txt\"\r\n\r\n" + conteudo_arquivo;
+                                        string html_content =
+                                            "<!DOCTYPE html><html><head><meta charset='utf-8'><title>ZODIAC ENGINE</title>"
+                                            "<style>"
+                                            "body { background-color: #0d0d0d; color: #00ffcc; font-family: 'Courier New', monospace; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }"
+                                            ".box { text-align: center; background: rgba(20, 20, 20, 0.9); border: 2px solid #ff0055; padding: 40px; box-shadow: 0 0 25px #ff0055, inset 0 0 15px rgba(255,0,85,0.3); border-radius: 8px; max-width: 600px; }"
+                                            "h1 { font-size: 36px; color: #ff0055; text-transform: uppercase; letter-spacing: 4px; margin-bottom: 20px; text-shadow: 0 0 10px #ff0055; }"
+                                            "p { font-size: 16px; color: #d9d9d9; line-height: 1.6; }"
+                                            "</style></head><body>"
+                                            "<div class='box'>"
+                                            "<h1>[ ZODIAC INTERCEPT ]</h1>" + linhas_html_customizadas +
+                                            "<p style='color:#ff0055; font-size:12px; margin-top:25px;'>⚡ OPERADOR: NULL ⚡</p>"
+                                            "</div></body></html>";
 
-                                        send(id_alvo, payload_transmissao.c_str(), payload_transmissao.length(), 0);
-                                        cout << VERDE << "[+] Arquivo local 'aviso.txt' redirecionado com sucesso." << RESET << endl;
+                                        string payload_html =
+                                            "HTTP/1.1 200 OK\r\n"
+                                            "Content-Type: text/html; charset=UTF-8\r\n"
+                                            "Content-Length: " + to_string(html_content.length()) + "\r\n"
+                                            "Connection: close\r\n\r\n" + html_content;
+
+                                        send(id_alvo, payload_html.c_str(), payload_html.length(), 0);
+                                        cout << VERDE << "[+] Interface injetada com o texto do 'aviso.txt'." << RESET << endl;
                                     }
 
                                     if (prefixo == "kick") {
@@ -234,6 +247,7 @@ int main() {
             cout << CIANO << "ZODIAC_NULL_CONSOLE_> " << flush;
         }
 
+        // CORREÇÃO CIRÚRGICA: Tipo de dado buf alocado como array de 1024 bytes (Ponteiro válido para void*)
         for (auto it = lista_alvos.begin(); it != lista_alvos.end(); ) {
             if (FD_ISSET(it->id, &conjunto_leitura)) {
                 char buf[1024] = {0};
