@@ -29,7 +29,7 @@ struct Alvo {
 };
 
 int socket_principal;
-vector<Alvo> lista_alvos; 
+vector<Alvo> lista_alvos;
 
 void desenhar_menu_zodiac() {
     cout << ROXO << "=================================================================================" << RESET << endl;
@@ -54,12 +54,11 @@ void fechar_fortaleza(int sinal) {
     close(socket_principal);
     exit(sinal);
 }
-
 int main() {
     signal(SIGINT, fechar_fortaleza);
-    signal(SIGPIPE, SIG_IGN); 
-    
-    int PORTA_ARMADILHA  = 8081;          
+    signal(SIGPIPE, SIG_IGN);
+
+    int PORTA_ARMADILHA  = 8081;
     socket_principal = socket(AF_INET, SOCK_STREAM, 0);
     int op = 1;
     setsockopt(socket_principal, SOL_SOCKET, SO_REUSEADDR, &op, sizeof(op));
@@ -83,7 +82,7 @@ int main() {
     while (true) {
         FD_ZERO(&conjunto_leitura);
         FD_SET(socket_principal, &conjunto_leitura);
-        FD_SET(STDIN_FILENO, &conjunto_leitura); 
+        FD_SET(STDIN_FILENO, &conjunto_leitura);
 
         int max_fd = socket_principal;
         for (const auto& alvo : lista_alvos) {
@@ -94,7 +93,6 @@ int main() {
         int atividade = select(max_fd + 1, &conjunto_leitura, NULL, NULL, NULL);
         if (atividade < 0) continue;
 
-        // 1. RECEBIMENTO DE CONEXÕES DOS INTRUSOS
         if (FD_ISSET(socket_principal, &conjunto_leitura)) {
             struct sockaddr_in cliente;
             socklen_t tamanho_addr = sizeof(cliente);
@@ -106,16 +104,15 @@ int main() {
                 novo_alvo.ip = inet_ntoa(cliente.sin_addr);
                 lista_alvos.push_back(novo_alvo);
 
-                cout << VERDE << "\n[🛰️ ALVO INTERCEPTADO] ➔ Chassi na linha de escuta: " 
+                cout << VERDE << "\n[🛰️ ALVO INTERCEPTADO] ➔ Chassi na linha de escuta: "
                      << AMARELO << novo_alvo.ip << BRANCO << " (ID: " << novo_alvo.id << ")" << RESET << endl;
                 cout << CIANO << "ZODIAC_NULL_CONSOLE_> " << flush;
-                
+
                 string welcome = "HTTP/1.1 200 OK\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n[CONEXÃO MONITORADA PELO NÚCLEO SUPREMO ZODÍACO]\n";
                 send(novo_socket, welcome.c_str(), welcome.length(), 0);
             }
         }
 
-        // 2. COMANDOS DO CONSOLE INTERATIVO DO TECLADO
         if (FD_ISSET(STDIN_FILENO, &conjunto_leitura)) {
             string entrada;
             getline(cin, entrada);
@@ -136,15 +133,15 @@ int main() {
             else if (entrada == "list") {
                 cout << ROXO << "\n+-------------------------------------------------------+" << RESET << endl;
                 cout << CIANO << "|             TABELA DE CHASSIS ATIVOS (NULL)           |" << RESET << endl;
-                cout << ROXO << "+----------+-------------------+------------------------+" << RESET << endl;
+                cout << ROXO << "+----------+-------------------+------------------------+" << endl;
                 cout << AMARELO << "| INDEX ID | ENDEREÇO IP REAL  | STATUS DO MONITOR      |" << endl;
                 cout << ROXO << "+----------+-------------------+------------------------+" << RESET << endl;
                 if (lista_alvos.empty()) {
                     cout << BRANCO << "|      [ NENHUM INTRUSO PRESO NA ARMADILHA ATUALMENTE ]        |" << RESET << endl;
                 } else {
                     for (const auto& alvo : lista_alvos) {
-                        cout << BRANCO << "| " << setw(8) << alvo.id 
-                             << " | " << setw(17) << alvo.ip 
+                        cout << BRANCO << "| " << setw(8) << alvo.id
+                             << " | " << setw(17) << alvo.ip
                              << " | " << VERDE << "LINHA MONITORADA 🟢 " << BRANCO << " |" << RESET << endl;
                     }
                 }
@@ -168,11 +165,11 @@ int main() {
                             for (auto it = lista_alvos.begin(); it != lista_alvos.end(); ++it) {
                                 if (it->id == id_alvo) {
                                     achou = true;
-                                    
+
                                     if (linkar_arquivo_local) {
                                         ifstream arquivo_local("/home/gabriel/POISON/aviso.txt");
                                         string conteudo_arquivo = "";
-                                        
+
                                         if (arquivo_local.is_open()) {
                                             string linha;
                                             while (getline(arquivo_local, linha)) {
@@ -183,22 +180,15 @@ int main() {
                                             conteudo_arquivo = "AVISO SUPREMO ZODIACO: Conexao encerrada pelo operador NULL.\n";
                                         }
 
-                                        string payload_transmissao = 
+                                        string payload_transmissao =
                                             "HTTP/1.1 200 OK\r\n"
                                             "Content-Type: text/plain\r\n"
                                             "Content-Disposition: attachment; filename=\"ZODIAC_WARNING.txt\"\r\n\r\n" + conteudo_arquivo;
-                                        
+
                                         send(id_alvo, payload_transmissao.c_str(), payload_transmissao.length(), 0);
                                         cout << VERDE << "[+] Arquivo local 'aviso.txt' redirecionado com sucesso." << RESET << endl;
                                     }
 
-                                    if (prefixo == "kick") {
-                                        cout << VERMELHO << "\n[-] [EJEÇÃO] Expulsando o ID " << id_alvo << " do barramento." << RESET << endl;
-                                        close(id_alvo);
-                                    } else {
-                                        cout << VERMELHO << "\n🔥 [ZODIAC STRIKE] -> Descarregando saturação no ID: " << id_alvo << RESET << endl;
-                                        string carga = "🚨 [ZODIAC OVERSIZE CRASH BY NULL] 🚨\n";
-                                        for (int i = 0; i < 100000; ++i) {
                                     if (prefixo == "kick") {
                                         cout << VERMELHO << "\n[-] [EJEÇÃO] Expulsando o ID " << id_alvo << " do barramento." << RESET << endl;
                                         close(id_alvo);
@@ -216,7 +206,7 @@ int main() {
                                 }
                             }
                             if (!achou) cout << VERMELHO << "[!] ID não encontrado." << RESET << endl;
-                        } 
+                        }
                         catch (...) {
                             cout << VERMELHO << "[!] Use 'kick:ID:file' ou 'strike:ID:file'" << RESET << endl;
                         }
@@ -244,10 +234,9 @@ int main() {
             cout << CIANO << "ZODIAC_NULL_CONSOLE_> " << flush;
         }
 
-        // 3. MONITORAMENTO DE REDE E QUEDAS DE CONEXÃO (CORRIGIDO)
         for (auto it = lista_alvos.begin(); it != lista_alvos.end(); ) {
             if (FD_ISSET(it->id, &conjunto_leitura)) {
-                char buf[1024] = {0}; // Buffer alocado como array para aceitar ponteiro void* legítimo
+                char buf[1024] = {0};
                 if (recv(it->id, buf, sizeof(buf) - 1, 0) <= 0) {
                     cout << VERMELHO << "\n[-] [DESCONEXÃO] O alvo do ID " << it->id << " fugiu." << RESET << endl;
                     close(it->id);
