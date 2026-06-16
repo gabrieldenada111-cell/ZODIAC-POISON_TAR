@@ -29,7 +29,7 @@ struct Alvo {
 };
 
 int socket_principal;
-vector<Alvo> lista_alvos;
+vector<Alvo> lista_alvos; 
 
 void desenhar_menu_zodiac() {
     cout << ROXO << "=================================================================================" << RESET << endl;
@@ -37,13 +37,12 @@ void desenhar_menu_zodiac() {
     cout << CIANO << "|_  _  |/ __ \\|  __ \\ | |  / ___|" << endl;
     cout << CIANO << "  / /  | /  \\ | |  \\ \\| | | |      " << VERMELHO << "   [ OPERADOR SUPREMO ]" << endl;
     cout << CIANO << " / /__ | \\__/ | |__/ /| | | |___   " << BRANCO << "       ⚡ " << VERMELHO << PISCANDO << "N U L L" << RESET << BRANCO << " ⚡" << endl;
-    cout << CIANO << "|_____| \\____/|_____/ |_|  \\____|  " << VERDE << "   (🎨 CYBER-INJECT v9.5 PURE WEB ⚙️)" << endl;
+    cout << CIANO << "|_____| \\____/|_____/ |_|  \\____|  " << VERDE << "   (🎨 MATRIX CORE ENGINE v9.5 ⚙️)" << endl;
     cout << ROXO << "=================================================================================" << RESET << endl;
     cout << VERDE << "   [+] Comandos: 'list' (tabela) | 'clear' (limpar) | 'exit:all' (desligar tudo)" << RESET << endl;
-    cout << CIANO << "   [*] Redirecionar TXT para HTML: 'kick:ID:file' ou 'strike:ID:file'" << RESET << endl;
-    cout << AMARELO << "   [!] Nota: O sistema vai puxar o texto do arquivo '/home/gabriel/POISON/aviso.txt'" << endl;
-    cout << ROXO << "=================================================================================" << RESET << endl;
-    cout << AMARELO << "   [*] Hub do Zodíaco operacional. Aguardando pacotes...\n" << RESET << endl;
+    cout << CIANO << "   [*] Enviar interface: 'kick:ID:file' | Disparar Video: 'strike:ID'" << RESET << endl;
+    cout << ROXO << "=================================================================================" << endl;
+    cout << AMARELO << "   [*] Central Zodíaco operacional. Aguardando conexões...\n" << RESET << endl;
 }
 
 void fechar_fortaleza(int sinal) {
@@ -56,9 +55,9 @@ void fechar_fortaleza(int sinal) {
 }
 int main() {
     signal(SIGINT, fechar_fortaleza);
-    signal(SIGPIPE, SIG_IGN);
-
-    int PORTA_ARMADILHA  = 8081;
+    signal(SIGPIPE, SIG_IGN); 
+    
+    int PORTA_ARMADILHA  = 8081;          
     socket_principal = socket(AF_INET, SOCK_STREAM, 0);
     int op = 1;
     setsockopt(socket_principal, SOL_SOCKET, SO_REUSEADDR, &op, sizeof(op));
@@ -82,7 +81,7 @@ int main() {
     while (true) {
         FD_ZERO(&conjunto_leitura);
         FD_SET(socket_principal, &conjunto_leitura);
-        FD_SET(STDIN_FILENO, &conjunto_leitura);
+        FD_SET(STDIN_FILENO, &conjunto_leitura); 
 
         int max_fd = socket_principal;
         for (const auto& alvo : lista_alvos) {
@@ -104,15 +103,14 @@ int main() {
                 novo_alvo.ip = inet_ntoa(cliente.sin_addr);
                 lista_alvos.push_back(novo_alvo);
 
-                cout << VERDE << "\n[🛰️ ALVO INTERCEPTADO] ➔ Chassi linkado no terminal: "
+                cout << VERDE << "\n[🛰️ ALVO INTERCEPTADO] ➔ Chassi linkado no terminal: " 
                      << AMARELO << novo_alvo.ip << BRANCO << " (ID: " << novo_alvo.id << ")" << RESET << endl;
                 cout << CIANO << "ZODIAC_NULL_CONSOLE_> " << flush;
-
+                
                 string welcome = "HTTP/1.1 200 OK\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n[CONEXÃO MONITORADA PELO NÚCLEO SUPREMO ZODÍACO]\n";
                 send(novo_socket, welcome.c_str(), welcome.length(), 0);
             }
         }
-
         if (FD_ISSET(STDIN_FILENO, &conjunto_leitura)) {
             string entrada;
             getline(cin, entrada);
@@ -127,6 +125,7 @@ int main() {
                     close(alvo.id);
                 }
                 close(socket_principal);
+                cout << VERDE << "[+] Central desligada com sucesso." << RESET << endl;
                 exit(0);
             }
             else if (entrada == "list") {
@@ -139,8 +138,8 @@ int main() {
                     cout << BRANCO << "|      [ NENHUM INTRUSO PRESO NA ARMADILHA ATUALMENTE ]        |" << RESET << endl;
                 } else {
                     for (const auto& alvo : lista_alvos) {
-                        cout << BRANCO << "| " << setw(8) << alvo.id
-                             << " | " << setw(17) << alvo.ip
+                        cout << BRANCO << "| " << setw(8) << alvo.id 
+                             << " | " << setw(17) << alvo.ip 
                              << " | " << VERDE << "LINHA MONITORADA 🟢 " << BRANCO << " |" << RESET << endl;
                     }
                 }
@@ -164,11 +163,11 @@ int main() {
                             for (auto it = lista_alvos.begin(); it != lista_alvos.end(); ++it) {
                                 if (it->id == id_alvo) {
                                     achou = true;
-
+                                    
                                     if (linkar_arquivo_local) {
-                                        ifstream arquivo_local("/home/gabriel/POISON/aviso.txt");
+                                        ifstream arquivo_local("/home/gabriel/POISON/ZODIAC-POISON_TAR/aviso.txt");
                                         string linhas_html_customizadas = "";
-
+                                        
                                         if (arquivo_local.is_open()) {
                                             string linha;
                                             while (getline(arquivo_local, linha)) {
@@ -179,7 +178,7 @@ int main() {
                                             linhas_html_customizadas = "<p>AVISO SUPREMO ZODIACO: Linha encerra por NULL.</p>";
                                         }
 
-                                        string html_content =
+                                        string html_content = 
                                             "<!DOCTYPE html><html><head><meta charset='utf-8'><title>ZODIAC ENGINE</title>"
                                             "<style>"
                                             "body { background-color: #0d0d0d; color: #00ffcc; font-family: 'Courier New', monospace; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }"
@@ -192,26 +191,22 @@ int main() {
                                             "<p style='color:#ff0055; font-size:12px; margin-top:25px;'>⚡ OPERADOR: NULL ⚡</p>"
                                             "</div></body></html>";
 
-                                        string payload_html =
+                                        string payload_html = 
                                             "HTTP/1.1 200 OK\r\n"
                                             "Content-Type: text/html; charset=UTF-8\r\n"
                                             "Content-Length: " + to_string(html_content.length()) + "\r\n"
                                             "Connection: close\r\n\r\n" + html_content;
-
+                                        
                                         send(id_alvo, payload_html.c_str(), payload_html.length(), 0);
-                                        cout << VERDE << "[+] Interface injetada com o texto do 'aviso.txt'." << RESET << endl;
                                     }
 
                                     if (prefixo == "kick") {
                                         cout << VERMELHO << "\n[-] [EJEÇÃO] Expulsando o ID " << id_alvo << " do barramento." << RESET << endl;
                                         close(id_alvo);
                                     } else {
-                                        cout << VERMELHO << "\n🔥 [ZODIAC STRIKE] -> Descarregando saturação no ID: " << id_alvo << RESET << endl;
-                                        string carga = "🚨 [ZODIAC OVERSIZE CRASH BY NULL] 🚨\n";
-                                        for (int i = 0; i < 100000; ++i) {
-                                            if (send(id_alvo, carga.c_str(), carga.length(), 0) < 0) break;
-                                        }
-                                        close(id_alvo);
+                                        cout << VERMELHO << "\n🔥 [ZODIAC STRIKE] -> Disparando comando de streaming no ID: " << id_alvo << RESET << endl;
+                                        string carga = "screen\n";
+                                        send(id_alvo, carga.c_str(), carga.length(), 0);
                                     }
 
                                     lista_alvos.erase(it);
@@ -219,9 +214,9 @@ int main() {
                                 }
                             }
                             if (!achou) cout << VERMELHO << "[!] ID não encontrado." << RESET << endl;
-                        }
+                        } 
                         catch (...) {
-                            cout << VERMELHO << "[!] Use 'kick:ID:file' ou 'strike:ID:file'" << RESET << endl;
+                            cout << VERMELHO << "[!] Use 'kick:ID:file' ou 'strike:ID'" << RESET << endl;
                         }
                     }
                     else {
@@ -247,10 +242,9 @@ int main() {
             cout << CIANO << "ZODIAC_NULL_CONSOLE_> " << flush;
         }
 
-        // CORREÇÃO CIRÚRGICA: Tipo de dado buf alocado como array de 1024 bytes (Ponteiro válido para void*)
         for (auto it = lista_alvos.begin(); it != lista_alvos.end(); ) {
             if (FD_ISSET(it->id, &conjunto_leitura)) {
-                char buf[1024] = {0};
+                char buf[1024] = {0}; 
                 if (recv(it->id, buf, sizeof(buf) - 1, 0) <= 0) {
                     cout << VERMELHO << "\n[-] [DESCONEXÃO] O alvo do ID " << it->id << " fugiu." << RESET << endl;
                     close(it->id);
