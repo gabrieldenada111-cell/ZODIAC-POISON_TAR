@@ -7,10 +7,11 @@
 #include <unistd.h>
 #include <csignal>
 #include <sstream>
+#include <sys/wait.h>
+#include <fstream> // Necessário para salvar o arquivo de log
 
 using namespace std;
 
-// Paleta de Cores Cyberpunk/Neon Avançada
 const string RESET     = "\033[0m";
 const string ROXO      = "\033[35m\033[1m";
 const string VERMELHO  = "\033[31m\033[1m";
@@ -23,38 +24,38 @@ const string PISCANDO  = "\033[5m";
 int socket_principal;
 
 void gangster_shutdown(int sinal) {
-    cout << "\n\n" << VERMELHO << "[-] [SISTEMA] Desconectando módulos e liberando portas do sistema..." << RESET << endl;
+    cout << "\n\n" << VERMELHO << "[-] [SISTEMA] Desconectando módulos e liberando portas..." << RESET << endl;
     close(socket_principal);
     exit(sinal);
 }
 
+void limpar_processos_filhos(int sinal) {
+    while (waitpid(-1, NULL, WNOHANG) > 0);
+}
+
 int main() {
     signal(SIGINT, gangster_shutdown);
+    signal(SIGCHLD, limpar_processos_filhos);
+    signal(SIGPIPE, SIG_IGN); 
+    
     system("clear");
 
-    // ========================================================================
-    // ⚙️ PAINEL DE CONFIGURAÇÃO INTERNA (MODIFIQUE LIVREMENTE AQUI)
-    // ========================================================================
     int PORTA_ARMADILHA       = 8081;          
-    int LINHAS_DE_INUNDACAO   = 100000;        
+    int LINHAS_DE_INUNDACAO   = 100000; 
     string NOME_SERVIDOR_FAKE = "Nginx/1.24.0 (Ubuntu)"; 
-    
-    // Mensagem de saturação que traz o seu nick cravado no terminal do invasor
     string VENENO_TERMINAL    = "🚨 [ZODIAC BY NULL] -> OVERFLOW_CRITICAL_WARNING: SYSTEM_HIERARCHY_COMPROMISED_🚨\n";
-    // ========================================================================
 
-    // INTERFACE REESTRUTURADA: Logotipo Gigante ZODIAC com as barras corrigidas e alinhadas
     cout << ROXO << "=================================================================================" << RESET << endl;
     cout << CIANO << " ______  ____  _____   _    ____ " << endl;
     cout << CIANO << "|_  _  |/ __ \\|  __ \\ | |  / ___|" << endl;
     cout << CIANO << "  / /  | /  \\ | |  \\ \\| | | |      " << VERMELHO << "   [ OPERADOR SUPREMO ]" << endl;
     cout << CIANO << " / /__ | \\__/ | |__/ /| | | |___   " << BRANCO << "       ⚡ " << VERMELHO << PISCANDO << "N U L L" << RESET << BRANCO << " ⚡" << endl;
-    cout << CIANO << "|_____| \\____/|_____/ |_|  \\____|  " << VERDE << "   (CRASH-ENGINE CONTRA SCANNERS)" << endl;
+    cout << CIANO << "|_____| \\____/|_____/ |_|  \\____|  " << VERDE << "   (🔥 ANALISTA DE AMEAÇAS 🔥)" << endl;
     cout << ROXO << "=================================================================================" << RESET << endl;
-    cout << VERDE << "   [+] Sensores de Saturação linkados com sucesso na porta: " << BRANCO << PORTA_ARMADILHA << RESET << endl;
-    cout << CIANO << "   [*] Armadilha ativa contra: Nmap, sqlmap, cURL, Python e Motores Web." << RESET << endl;
+    cout << VERDE << "   [+] Sensores ativos e analíticos linkados na porta: " << BRANCO << PORTA_ARMADILHA << RESET << endl;
+    cout << CIANO << "   [*] Mapeamento: Windows, Linux, macOS e detecção de Payloads." << RESET << endl;
     cout << ROXO << "=================================================================================" << RESET << endl;
-    cout << AMARELO << "   [*] Monitorando barramento de pacotes em tempo real...\n" << RESET << endl;
+    cout << AMARELO << "   [*] Escudo ativado. Vigilância passiva rodando em background...\n" << RESET << endl;
 
     socket_principal = socket(AF_INET, SOCK_STREAM, 0);
     int op = 1;
@@ -67,13 +68,12 @@ int main() {
     endereco.sin_port = htons(PORTA_ARMADILHA);
 
     if (bind(socket_principal, (struct sockaddr*)&endereco, sizeof(endereco)) < 0) {
-        cout << VERMELHO << "[!] ERRO CRÍTICO: A porta " << PORTA_ARMADILHA << " está bloqueada ou em uso." << RESET << endl;
+        cout << VERMELHO << "[!] ERRO CRÍTICO: A porta " << PORTA_ARMADILHA << " está bloqueada." << RESET << endl;
         return 1;
     }
 
-    listen(socket_principal, 20);
+    listen(socket_principal, 100);
 
-    // Loop atômico batizado com a sua assinatura de segurança customizada
     bool ZODIAC_NULL_OVERSIZE_PROTECTION = true;
 
     while (ZODIAC_NULL_OVERSIZE_PROTECTION) {
@@ -84,52 +84,90 @@ int main() {
         if (socket_alvo >= 0) {
             string ip_invasor = inet_ntoa(cliente.sin_addr);
             
-            char buffer_requisicao[2048] = {0};
-            recv(socket_alvo, buffer_requisicao, sizeof(buffer_requisicao) - 1, 0);
-            string dados_requisicao(buffer_requisicao);
-
-            cout << VERMELHO << "🚨 [CAPTURA REALIZADA] ➔ CHASSI DE REDE INTERCEPTADO!" << RESET << endl;
-            cout << CIANO << "   ➔ Endereço IP:   " << AMARELO << ip_invasor << RESET << endl;
-
-            string ferramenta_detectada = "Conexão Manual/Desconhecida";
-            if (dados_requisicao.find("nmap") != string::npos) {
-                ferramenta_detectada = VERMELHO + PISCANDO + "NMAP NETWORK SCANNER 🔍" + RESET;
-            } else if (dados_requisicao.find("sqlmap") != string::npos) {
-                ferramenta_detectada = VERMELHO + PISCANDO + "SQLMAP INJECTION TOOL 🗄️" + RESET;
-            } else if (dados_requisicao.find("python") != string::npos || dados_requisicao.find("curl") != string::npos) {
-                ferramenta_detectada = AMARELO + "SCRIPT AUTOMATIZADO (Python/cURL) 🐍" + RESET;
-            } else if (dados_requisicao.find("GET") != string::npos || dados_requisicao.find("POST") != string::npos) {
-                ferramenta_detectada = VERDE + "Navegador Web Comercial 🌐" + RESET;
-            }
-
-            cout << CIANO << "   ➔ Assinatura:    " << ferramenta_detectada << endl;
-            cout << CIANO << "   ➔ Contra-Medida: " << VERDE << "Inundando buffer com " << BRANCO << LINHAS_DE_INUNDACAO << VERDE << " rajadas de texto..." << RESET << endl;
-
-            string resposta_http = 
-                "HTTP/1.1 200 OK\r\n"
-                "Server: " + NOME_SERVIDOR_FAKE + "\r\n"
-                "Content-Type: text/plain; charset=UTF-8\r\n"
-                "Transfer-Encoding: chunked\r\n"
-                "Connection: keep-alive\r\n\r\n";
+            pid_t pid = fork();
             
-            send(socket_alvo, resposta_http.c_str(), resposta_http.length(), 0);
+            if (pid == 0) {
+                close(socket_principal); 
+                
+                char buffer_requisicao[2048] = {0};
+                recv(socket_alvo, buffer_requisicao, sizeof(buffer_requisicao) - 1, 0);
+                string dados_requisicao(buffer_requisicao);
 
-            stringstream stream_hex;
-            stream_hex << hex << VENENO_TERMINAL.length();
-            string bloco_chunk = stream_hex.str() + "\r\n" + VENENO_TERMINAL + "\r\n";
+                // 1. RASTREAMENTO DO SISTEMA OPERACIONAL (Fingerprinting)
+                string os_detectado = "Desconhecido / Outro";
+                string dados_lower = dados_requisicao;
+                for (auto &c : dados_lower) c = tolower(c);
 
-            for (int i = 0; i < LINHAS_DE_INUNDACAO; ++i) {
-                if (send(socket_alvo, bloco_chunk.c_str(), bloco_chunk.length(), 0) < 0) {
-                    break; 
+                if (dados_lower.find("windows") != string::npos) {
+                    os_detectado = "Windows PC OS 🪟";
+                } else if (dados_lower.find("macintosh") != string::npos || dados_lower.find("mac os") != string::npos || dados_lower.find("iphone") != string::npos) {
+                    os_detectado = "macOS / iOS Apple 🍏";
+                } else if (dados_lower.find("linux") != string::npos) {
+                    os_detectado = "Linux Kernel OS 🐧";
                 }
-                usleep(25); 
+
+                // 2. DETECÇÃO DE PAYLOADS E FERRAMENTAS INVASORAS
+                string tipo_requisicao = "Acesso Web Convencional";
+                string severidade = VERDE + "Baixa (Vulnerabilidade Não Explorada)" + RESET;
+                
+                if (dados_lower.find("nmap") != string::npos) {
+                    tipo_requisicao = "Varredura de Portas (Nmap Scanner)";
+                    severidade = AMARELO + "Média (Reconhecimento Ativo)" + RESET;
+                } else if (dados_lower.find("sqlmap") != string::npos || dados_lower.find("select") != string::npos || dados_lower.find("union") != string::npos) {
+                    tipo_requisicao = "Tentativa de Injeção SQL (Exploit)";
+                    severidade = VERMELHO + PISCANDO + "ALTA (Ataque Crítico Detectado!)" + RESET;
+                } else if (dados_lower.find("python") != string::npos || dados_lower.find("curl") != string::npos) {
+                    tipo_requisicao = "Script Automatizado Automatizado";
+                    severidade = AMARELO + "Média (Script de Varredura)" + RESET;
+                }
+
+                // 3. GRAVAÇÃO AUTOMÁTICA NO ARQUIVO DE LOG DE INTELIGÊNCIA
+                ofstream arquivo_log("zodiac_threat_intelligence.log", ios::app);
+                if (arquivo_log.is_open()) {
+                    time_t agora = time(0);
+                    char* hora_texto = ctime(&agora);
+                    hora_texto[strcspn(hora_texto, "\n")] = 0;
+                    
+                    arquivo_log << "[" << hora_texto << "] IP: " << ip_invasor 
+                                << " | OS: " << os_detectado 
+                                << " | Tipo: " << tipo_requisicao << "\n";
+                    arquivo_log.close();
+                }
+
+                // Exibe os metadados mastigados na tela do console principal
+                cout << VERMELHO << "🚨 [ALVO TOTALMENTE MAPEADO] ➔ ASSINATURA DE HARDWARE EXTRAÍDA!" << RESET << endl;
+                cout << CIANO << "   ➔ Endereço IP:     " << AMARELO << ip_invasor << RESET << endl;
+                cout << CIANO << "   ➔ Sistema Operac.: " << BRANCO << os_detectado << RESET << endl;
+                cout << CIANO << "   ➔ Vetor do Alvo:   " << AMARELO << tipo_requisicao << RESET << endl;
+                cout << CIANO << "   ➔ Nível de Risco:  " << severidade << endl;
+                cout << ROXO << "---------------------------------------------------------------------------------" << RESET << endl;
+
+                // Resposta padrão HTTP Chunked para saturar e prender a ferramenta do atacante
+                string resposta_http = 
+                    "HTTP/1.1 200 OK\r\n"
+                    "Server: " + NOME_SERVIDOR_FAKE + "\r\n"
+                    "Content-Type: text/plain; charset=UTF-8\r\n"
+                    "Transfer-Encoding: chunked\r\n"
+                    "Connection: keep-alive\r\n\r\n";
+                
+                send(socket_alvo, resposta_http.c_str(), resposta_http.length(), 0);
+
+                stringstream stream_hex;
+                stream_hex << hex << VENENO_TERMINAL.length();
+                string bloco_chunk = stream_hex.str() + "\r\n" + VENENO_TERMINAL + "\r\n";
+
+                for (int i = 0; i < LINHAS_DE_INUNDACAO; ++i) {
+                    if (send(socket_alvo, bloco_chunk.c_str(), bloco_chunk.length(), 0) < 0) {
+                        break; 
+                    }
+                    usleep(10); 
+                }
+
+                send(socket_alvo, "0\r\n\r\n", 5, 0);
+                close(socket_alvo);
+                exit(0); 
             }
-
-            send(socket_alvo, "0\r\n\r\n", 5, 0);
-
-            cout << VERDE << "[+] STATUS: Carga entregue. Conexão redefinida pela assinatura de NULL." << RESET << endl;
-            cout << ROXO << "---------------------------------------------------------------------------------" << RESET << endl;
-            close(socket_alvo);
+            close(socket_alvo); 
         }
     }
     return 0;
