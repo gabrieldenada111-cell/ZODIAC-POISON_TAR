@@ -8,10 +8,10 @@
 #include <csignal>
 #include <vector>
 #include <sys/select.h>
+#include <iomanip> // Necessário para alinhar a tabela na tela
 
 using namespace std;
 
-// Paleta de Cores Cyberpunk/Neon Avançada
 const string RESET     = "\033[0m";
 const string ROXO      = "\033[35m\033[1m";
 const string VERMELHO  = "\033[31m\033[1m";
@@ -21,13 +21,19 @@ const string AMARELO   = "\033[33m\033[1m";
 const string BRANCO    = "\033[37m\033[1m";
 const string PISCANDO  = "\033[5m";
 
+// Estrutura para guardar os dados dos alvos na tabela
+struct Alvo {
+    int id;
+    string ip;
+};
+
 int socket_principal;
-vector<int> sockets_clientes; // Guarda a lista de conexões ativas para o Broadcast
+vector<Alvo> lista_alvos; 
 
 void fechar_fortaleza(int sinal) {
     cout << "\n\n" << VERMELHO << "[-] [SISTEMA] Fechando conexões e liberando portas..." << RESET << endl;
-    for (int fd : sockets_clientes) {
-        close(fd);
+    for (const auto& alvo : lista_alvos) {
+        close(alvo.id);
     }
     close(socket_principal);
     exit(sinal);
@@ -35,23 +41,23 @@ void fechar_fortaleza(int sinal) {
 
 int main() {
     signal(SIGINT, fechar_fortaleza);
-    signal(SIGPIPE, SIG_IGN); // Bloqueia quedas por desconexão do alvo
+    signal(SIGPIPE, SIG_IGN); 
     
     system("clear");
 
-    int PORTA_ARMADILHA = 8081;          
+    int PORTA_ARMADILHA  = 8081;          
 
     cout << ROXO << "=================================================================================" << RESET << endl;
     cout << CIANO << " ______  ____  _____   _    ____ " << endl;
     cout << CIANO << "|_  _  |/ __ \\|  __ \\ | |  / ___|" << endl;
     cout << CIANO << "  / /  | /  \\ | |  \\ \\| | | |      " << VERMELHO << "   [ OPERADOR SUPREMO ]" << endl;
     cout << CIANO << " / /__ | \\__/ | |__/ /| | | |___   " << BRANCO << "       ⚡ " << VERMELHO << PISCANDO << "N U L L" << RESET << BRANCO << " ⚡" << endl;
-    cout << CIANO << "|_____| \\____/|_____/ |_|  \\____|  " << VERDE << "   (🔥 INTERACTIVE BROADCAST 🔥)" << endl;
+    cout << CIANO << "|_____| \\____/|_____/ |_|  \\____|  " << VERDE << "   (⚙️ MATRIX CONSOLE SYSTEM ⚙️)" << endl;
     cout << ROXO << "=================================================================================" << RESET << endl;
-    cout << VERDE << "   [+] Central Interativa ativa e monitorando a porta: " << BRANCO << PORTA_ARMADILHA << RESET << endl;
-    cout << CIANO << "   [*] Digite mensagens no console para transmitir dados aos alvos conectados." << RESET << endl;
+    cout << VERDE << "   [+] Central ativa. Digite 'list' para ver a tabela de chassis ativos." << RESET << endl;
+    cout << CIANO << "   [*] Comandos: 'list' (tabela) | 'all:texto' (massa) | 'ID:texto' (direcionado)" << RESET << endl;
     cout << ROXO << "=================================================================================" << RESET << endl;
-    cout << AMARELO << "   [*] Aguardando conexões... Digite sua transmissão a qualquer momento:\n" << RESET << endl;
+    cout << AMARELO << "   [*] Aguardando conexões...\n" << RESET << endl;
 
     socket_principal = socket(AF_INET, SOCK_STREAM, 0);
     int op = 1;
@@ -64,7 +70,7 @@ int main() {
     endereco.sin_port = htons(PORTA_ARMADILHA);
 
     if (bind(socket_principal, (struct sockaddr*)&endereco, sizeof(endereco)) < 0) {
-        cout << VERMELHO << "[!] ERRO CRÍTICO: A porta " << PORTA_ARMADILHA << " está bloqueada." << RESET << endl;
+        cout << VERMELHO << "[!] ERRO CRÍTICO: A porta " << PORTA_ARMADILHA << " está ocupada." << RESET << endl;
         return 1;
     }
 
@@ -75,77 +81,85 @@ int main() {
     while (true) {
         FD_ZERO(&conjunto_leitura);
         FD_SET(socket_principal, &conjunto_leitura);
-        FD_SET(STDIN_FILENO, &conjunto_leitura); // Monitora o teclado do seu terminal
+        FD_SET(STDIN_FILENO, &conjunto_leitura); 
 
         int max_fd = socket_principal;
-        for (int fd : sockets_clientes) {
-            FD_SET(fd, &conjunto_leitura);
-            if (fd > max_fd) max_fd = fd;
+        for (const auto& alvo : lista_alvos) {
+            FD_SET(alvo.id, &conjunto_leitura);
+            if (alvo.id > max_fd) max_fd = alvo.id;
         }
 
-        // Seleciona qual canal enviou dados (Teclado ou Rede) sem travar o processador
         int atividade = select(max_fd + 1, &conjunto_leitura, NULL, NULL, NULL);
-
         if (atividade < 0) continue;
 
-        // 1. CORREÇÃO: SE ENTRAR UMA NOVA CONEXÃO DE ATACANTE (Uso correto de FD_ISSET)
+        // 1. RECEBENDO UM NOVO CHASSI DE REDE
         if (FD_ISSET(socket_principal, &conjunto_leitura)) {
             struct sockaddr_in cliente;
             socklen_t tamanho_addr = sizeof(cliente);
             int novo_socket = accept(socket_principal, (struct sockaddr*)&cliente, &tamanho_addr);
 
             if (novo_socket >= 0) {
-                string ip_invasor = inet_ntoa(cliente.sin_addr);
-                sockets_clientes.push_back(novo_socket);
+                Alvo novo_alvo;
+                novo_alvo.id = novo_socket;
+                novo_alvo.ip = inet_ntoa(cliente.sin_addr);
+                lista_alvos.push_back(novo_alvo);
 
-                cout << VERDE << "\n[🛰️ ALVO CONECTADO] ➔ Chassi de rede preso no terminal: " << AMARELO << ip_invasor 
-                     << BRANCO << " (ID: " << novo_socket << ")" << RESET << endl;
+                cout << VERDE << "\n[🛰️ ALVO INTERCEPTADO] ➔ Novo chassi adicionado à tabela de controle: " 
+                     << AMARELO << novo_alvo.ip << BRANCO << " (ID: " << novo_alvo.id << ")" << RESET << endl;
                 cout << CIANO << "ZODIAC_NULL_CONSOLE_> " << flush;
                 
-                string welcome = "HTTP/1.1 200 OK\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n[CONEXÃO ESTABELECIDA COM O MAESTRO ZODIACO]\n";
+                string welcome = "HTTP/1.1 200 OK\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n[CONEXÃO MONITORADA PELO NÚCLEO SUPREMO ZODÍACO]\n";
                 send(novo_socket, welcome.c_str(), welcome.length(), 0);
             }
         }
 
-        // 2. CORREÇÃO: SE VOCÊ DIGITAR ALGO NO SEU TECLADO (Uso correto de FD_ISSET)
+        // 2. PROCESSAMENTO DO SEU TECLADO (COMANDO LIST E ALERTAS)
         if (FD_ISSET(STDIN_FILENO, &conjunto_leitura)) {
-            string entrada_usuario;
-            getline(cin, entrada_usuario);
+            string entrada;
+            getline(cin, entrada);
 
-            if (!entrada_usuario.empty() && !sockets_clientes.empty()) {
-                size_t pos_dois_pontos = entrada_usuario.find(":");
+            if (entrada == "list") {
+                // DESENHA A TABELA CYBERPUNK NA TELA DO TERMINAL
+                cout << ROXO << "\n+-------------------------------------------------------+" << RESET << endl;
+                cout << CIANO << "|             TABELA DE CHASSIS ATIVOS (NULL)           |" << RESET << endl;
+                cout << ROXO << "+----------+-------------------+------------------------+" << RESET << endl;
+                cout << AMARELO << "| INDEX ID | ENDEREÇO IP REAL  | STATUS DO MONITOR      |" << RESET << endl;
+                cout << ROXO << "+----------+-------------------+------------------------+" << RESET << endl;
                 
+                if (lista_alvos.empty()) {
+                    cout << BRANCO << "|      [ NENHUM INTRUSO PRESO NA ARMADILHA ATUALMENTE ]        |" << RESET << endl;
+                } else {
+                    for (const auto& alvo : lista_alvos) {
+                        cout << BRANCO << "| " << setw(8) << alvo.id 
+                             << " | " << setw(17) << alvo.ip 
+                             << " | " << VERDE << "LINHA MONITORADA 🟢 " << BRANCO << " |" << RESET << endl;
+                    }
+                }
+                cout << ROXO << "+----------+-------------------+------------------------+\n" << RESET << endl;
+            }
+            else if (!entrada.empty() && !lista_alvos.empty()) {
+                size_t pos_dois_pontos = entrada.find(":");
                 if (pos_dois_pontos != string::npos) {
-                    string alvo = entrada_usuario.substr(0, pos_dois_pontos);
-                    string msg_real = entrada_usuario.substr(pos_dois_pontos + 1) + "\n";
+                    string prefixo = entrada.substr(0, pos_dois_pontos);
+                    string msg_real = "🚨 [AVISO ZODIACO]: " + entrada.substr(pos_dois_pontos + 1) + "\n";
 
-                    if (alvo == "all") {
-                        for (auto it = sockets_clientes.begin(); it != sockets_clientes.end(); ) {
-                            if (send(*it, msg_real.c_str(), msg_real.length(), 0) < 0) {
-                                close(*it);
-                                it = sockets_clientes.erase(it);
+                    if (prefixo == "all") {
+                        for (auto it = lista_alvos.begin(); it != lista_alvos.end(); ) {
+                            if (send(it->id, msg_real.c_str(), msg_real.length(), 0) < 0) {
+                                close(it->id);
+                                it = lista_alvos.erase(it);
                             } else {
                                 ++it;
                             }
                         }
-                        cout << VERDE << "[+] Transmissão enviada para todos os chassis ativos." << RESET << endl;
+                        cout << VERDE << "[+] Alerta em massa injetado nos terminais." << RESET << endl;
                     } else {
                         try {
-                            int id_alvo = stoi(alvo);
+                            int id_alvo = stoi(prefixo);
                             send(id_alvo, msg_real.c_str(), msg_real.length(), 0);
-                            cout << CIANO << "[+] Transmissão direcionada enviada ao ID: " << id_alvo << RESET << endl;
+                            cout << CIANO << "[+] Alerta direcionado enviado ao ID: " << id_alvo << RESET << endl;
                         } catch (...) {
-                            cout << VERMELHO << "[!] Formato inválido. Use 'all:texto' ou 'ID:texto' (Ex: 4:mensagem)" << RESET << endl;
-                        }
-                    }
-                } else {
-                    string msg_padrao = entrada_usuario + "\n";
-                    for (auto it = sockets_clientes.begin(); it != sockets_clientes.end(); ) {
-                        if (send(*it, msg_padrao.c_str(), msg_padrao.length(), 0) < 0) {
-                            close(*it);
-                            it = sockets_clientes.erase(it);
-                        } else {
-                            ++it;
+                            cout << VERMELHO << "[!] Use 'list' ou 'all:texto' ou 'ID:texto'." << RESET << endl;
                         }
                     }
                 }
@@ -153,16 +167,14 @@ int main() {
             cout << CIANO << "ZODIAC_NULL_CONSOLE_> " << flush;
         }
 
-        // 3. CORREÇÃO: SE ALGUM ALVO SE DESCONECTAR OU ENVIAR DADOS
-        for (auto it = sockets_clientes.begin(); it != sockets_clientes.end(); ) {
-            if (FD_ISSET(*it, &conjunto_leitura)) {
-                char buffer_leitura[512] = {0}; // CORREÇÃO: Buffer do tipo array alocado corretamente
-                int bytes_recebidos = recv(*it, buffer_leitura, sizeof(buffer_leitura) - 1, 0);
-
-                if (bytes_recebidos <= 0) {
-                    cout << VERMELHO << "\n[-] [DESCONEXÃO] O alvo do ID " << *it << " fechou a conexão." << RESET << endl;
-                    close(*it);
-                    it = sockets_clientes.erase(it);
+        // 3. MONITORAMENTO DE DESCONEXÕES
+        for (auto it = lista_alvos.begin(); it != lista_alvos.end(); ) {
+            if (FD_ISSET(it->id, &conjunto_leitura)) {
+                char buf = {0};
+                if (recv(it->id, buf, sizeof(buf) - 1, 0) <= 0) {
+                    cout << VERMELHO << "\n[-] [DESCONEXÃO] O alvo do ID " << it->id << " quebrou a linha e fugiu." << RESET << endl;
+                    close(it->id);
+                    it = lista_alvos.erase(it);
                     cout << CIANO << "ZODIAC_NULL_CONSOLE_> " << flush;
                 } else {
                     ++it;
